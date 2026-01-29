@@ -20,10 +20,16 @@ import Tasks from "./Components/Task";
 import Profile from "./Components/Profile";
 
 function App() {
+<<<<<<< Updated upstream
   const [user, loadingAuth] = useAuthState(auth); 
   const [role, setRole] = useState("member");
   const [loadingRole, setLoadingRole] = useState(true);
   const [screen, setScreen] = useState("dashboard"); // Set default screen
+=======
+  
+  const [inSociety, setInSociety] = useState(false);
+  const [user] = useAuthState(auth); 
+>>>>>>> Stashed changes
   const [tab, setTab] = useState("announcements");
   const [activeRoom, setActiveRoom] = useState(null);
 
@@ -33,6 +39,7 @@ function App() {
       return;
     }
 
+<<<<<<< Updated upstream
     const fetchRole = async () => {
       setLoadingRole(true);
       try {
@@ -46,6 +53,18 @@ function App() {
       }
       setLoadingRole(false);
     };
+=======
+  fetchRole();
+}, [user]);
+
+if (screen === "user") {
+  return (
+    <UserDashboard
+      goToSociety={() => setScreen("society")}
+    />
+  );
+}
+>>>>>>> Stashed changes
 
     fetchRole();
   }, [user]);
