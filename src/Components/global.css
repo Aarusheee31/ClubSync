@@ -1,0 +1,79 @@
+:root{
+  --bg-card: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.12);
+  --accent-1: #6c63ff;
+  --accent-2: #ff6b6b;
+  --accent-3: #f093fb;
+  --muted: rgba(255,255,255,0.75);
+}
+
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+  box-shadow: 0 8px 20px rgba(108,99,255,0.18);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.btn:hover{ transform: translateY(-3px); box-shadow: 0 12px 30px rgba(108,99,255,0.22); }
+.btn.ghost { background: transparent; color: white; border: 1px solid var(--glass-border); box-shadow: none; }
+.btn.warn { background: linear-gradient(90deg, #ff7a7a, #ffb36b); box-shadow: 0 8px 20px rgba(255,107,107,0.18); }
+
+input, textarea, select {
+  font-family: inherit;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.03);
+  color: #fff;
+  outline: none;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.6); }
+input:focus, textarea:focus { box-shadow: 0 6px 20px rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.22); }
+
+textarea { min-height: 120px; resize: vertical; }
+
+
+.card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.task-card, .room-card, .announcement-card { display: flex; flex-direction: column; gap: 8px; }
+.task-card .row, .room-card .row { display:flex; gap:8px; align-items:center; }
+
+.small-muted { color: rgba(255,255,255,0.75); font-size: 13px; }
+
+.announcement-card { padding: 12px 14px; border-radius: 12px; }
+.announcement-card.pinned { background: linear-gradient(90deg,#2f6df7,#4fb2ff); color: white; }
+
+.center { display:flex; align-items:center; justify-content:center; }
+.space-between { display:flex; align-items:center; justify-content:space-between; }
+
+.fade-in { animation: fadeInUp .36s ease both; }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+
+.input-inline { flex: 1; min-width: 120px; }
+.btn-sm { padding: 8px 12px; border-radius: 10px; font-size: 14px; }
+
+
+button svg { vertical-align: middle; margin-right: 8px; }
+
+@media (max-width: 600px) {
+  .btn { padding: 10px 12px; }
+}

@@ -1,69 +1,37 @@
-import { useEffect, useState } from "react";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { useState } from "react";
+import "./Attendance.css"; 
 
-function Attendance() {
-  const [active, setActive] = useState(false);
-  const [present, setPresent] = useState(false);
-
-  const attendanceRef = doc(db, "attendance", "current");
-
-  useEffect(() => {
-    const checkAttendance = async () => {
-      const snap = await getDoc(attendanceRef);
-      if (snap.exists()) {
-        setActive(snap.data().active);
-      }
-    };
-    checkAttendance();
-  }, []);
-
-  const startAttendance = async () => {
-    await setDoc(attendanceRef, {
-      active: true,
-      startedAt: new Date(),
-      presentCount: 0,
-    });
-    setActive(true);
-    setPresent(false);
-  };
-
-  const markPresent = async () => {
-    if (present) return;
-    const snap = await getDoc(attendanceRef);
-    if (snap.exists()) {
-      await updateDoc(attendanceRef, {
-        presentCount: snap.data().presentCount + 1,
-      });
-      setPresent(true);
-    }
-  };
-
-  const endAttendance = async () => {
-    await updateDoc(attendanceRef, {
-      active: false,
-      endedAt: new Date(),
-    });
-    setActive(false);
-  };
+function Attendance({ role }) {
+  const [hasMarked, setHasMarked] = useState(false);
+  const currentDate = new Date().toLocaleDateString('en-GB'); 
 
   return (
-    <div>
-      <h2>Attendance</h2>
+    <div className="attendance-container">
+      <div className="attendance-card">
+        <div className="card-header">
+          <div className="icon-circle">📍</div>
+          <div>
+            <h3>Daily Check-in</h3>
+            <p className="date-text">Session: {currentDate}</p>
+          </div>
+        </div>
 
-      {!active && (
-        <button onClick={startAttendance}>Start Attendance</button>
-      )}
-
-      {active && !present && (
-        <button onClick={markPresent}>Mark Present</button>
-      )}
-
-      {active && (
-        <button onClick={endAttendance}>End Attendance</button>
-      )}
-
-      {present && <p>✅ You are marked present</p>}
+        <div className="card-body">
+          {hasMarked ? (
+            <div className="status-confirmed">
+              <span className="check-icon">✓</span>
+              <p>Attendance logged for today</p>
+            </div>
+          ) : (
+            <>
+              <p className="instruction">Ready to start? Mark your presence for the current club session.</p>
+              <button className="mark-present-btn" onClick={() => setHasMarked(true)}>
+                Mark Me Present
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

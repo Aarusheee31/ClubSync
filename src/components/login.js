@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
+import "./Login.css";
 
 function Login({ goToSignup }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loginType, setLoginType] = useState("member"); // 👈 default
+  const [loginType, setLoginType] = useState("member");
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -13,58 +14,69 @@ function Login({ goToSignup }) {
       return;
     }
 
+    if (loginType === "admin" && email !== "admin@uni.edu") {
+      alert("Unauthorized: You do not have Admin credentials.");
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      
     } catch (error) {
-      alert(error.message);
+      alert("Login failed: " + error.message);
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>ClubSync Login</h2>
+    <div className="login-container">
+      <div className="login-card">
+        <h2>Club<span>Sync</span> Login</h2>
 
-    
-      <select
-        value={loginType}
-        onChange={(e) => setLoginType(e.target.value)}
-      >
-        <option value="member">Login as Member</option>
-        <option value="admin">Login as Admin</option>
-      </select>
+        <div className="input-group">
+          <label>Account Type</label>
+          <div className="custom-select-wrapper">
+            <select 
+              className="login-select"
+              value={loginType} 
+              onChange={(e) => setLoginType(e.target.value)}
+            >
+              <option value="member">Student / Member</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+        </div>
 
-      <br /><br />
+        <div className="input-group">
+          <label>Email Address</label>
+          <input
+            className="login-input"
+            placeholder="student@uni.edu"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-      <input
-        placeholder="Email / Roll No"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
+        <div className="input-group">
+          <label>Security Key</label>
+          <input
+            className="login-input"
+            type="password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-      <br /><br />
+        <button className="login-button" onClick={handleLogin}>
+          Authorize & Login
+        </button>
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={handleLogin}>Login</button>
-
-      <br /><br />
-
-      <p>
-        New user?{" "}
-        <span
-          style={{ color: "blue", cursor: "pointer" }}
-          onClick={goToSignup}
-        >
-          Signup
-        </span>
-      </p>
+        <p className="signup-text">
+          New to the hub?{" "}
+          <span className="signup-link" onClick={goToSignup}>Initialize Signup</span>
+        </p>
+      </div>
     </div>
   );
 }
