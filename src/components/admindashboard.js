@@ -3,11 +3,10 @@ import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import "./AdminDashboard.css";
-
-import Announcements from "./Announcements";
-import Attendance from "./Attendance";
-import Tasks from "./Task";
-import Rooms from "./Rooms";
+import Announcements from "./announcements";
+import Attendance from "./attendance";
+import Tasks from "./task";
+import Rooms from "./rooms";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("announcements");
@@ -35,7 +34,7 @@ function AdminDashboard() {
     <div className="admin-container">
       <header className="admin-header">
         <div className="header-left">
-          <h2 className="greeting">Admin Terminal</h2>
+          <h2 className="greeting">Terminal</h2>
           <div style={{color: 'var(--text-dim)', fontSize: '14px', marginTop: '5px'}}>
             {formattedDate} • <span style={{color: '#10b981'}}>System Live</span>
           </div>

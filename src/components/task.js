@@ -5,6 +5,7 @@ import {
   addDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
   doc,
   serverTimestamp,
   query,
@@ -22,19 +23,26 @@ function Tasks({ role }) {
     fetchTasks();
   }, []);
 
+  /* ================= FETCH ================= */
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      // Added ordering so new tasks appear at the top
       const q = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
       const snap = await getDocs(q);
-      setTasks(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
+      setTasks(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+          status: d.data().status || "pending", // 🔥 SAFETY FIX
+        }))
+      );
+    } catch (err) {
+      console.error("Fetch tasks error:", err);
     }
     setLoading(false);
   };
 
+  /* ================= CREATE ================= */
   const createTask = async () => {
     if (!title.trim()) return;
 
@@ -49,6 +57,7 @@ function Tasks({ role }) {
     fetchTasks();
   };
 
+  /* ================= MARK DONE ================= */
   const markDone = async (id) => {
     await updateDoc(doc(db, "tasks", id), {
       status: "done",
@@ -56,19 +65,35 @@ function Tasks({ role }) {
     fetchTasks();
   };
 
+  /* ================= DELETE ONE ================= */
+  const deleteTask = async (id) => {
+    if (!window.confirm("Delete this task?")) return;
+    await deleteDoc(doc(db, "tasks", id));
+    fetchTasks();
+  };
+
+  /* ================= DELETE ALL DONE ================= */
+  const deleteCompletedTasks = async () => {
+    if (!window.confirm("Delete ALL completed tasks?")) return;
+
+    const doneTasks = tasks.filter((t) => t.status === "done");
+    await Promise.all(
+      doneTasks.map((t) => deleteDoc(doc(db, "tasks", t.id)))
+    );
+
+    fetchTasks();
+  };
+
   return (
     <div className="tasks-wrapper">
       <style>{`
-        .tasks-wrapper {
-          max-width: 900px;
-          margin: 0 auto;
-        }
+        .tasks-wrapper { max-width: 900px; margin: 0 auto; }
 
         .tasks-header {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          margin-bottom: 30px;
+          align-items: center;
+          margin-bottom: 24px;
         }
 
         .tasks-title {
@@ -76,27 +101,23 @@ function Tasks({ role }) {
           font-weight: 800;
           color: #fff;
           display: flex;
-          align-items: center;
-          gap: 12px;
+          gap: 10px;
         }
 
-        /* ADMIN CREATION BAR */
         .admin-task-bar {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          padding: 10px;
-          border-radius: 16px;
           display: flex;
           gap: 10px;
-          margin-bottom: 40px;
-          backdrop-filter: blur(10px);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          padding: 12px;
+          border-radius: 14px;
+          margin-bottom: 24px;
         }
 
         .task-input {
           flex: 1;
           background: transparent;
           border: none;
-          padding: 12px 18px;
           color: white;
           font-size: 15px;
           outline: none;
@@ -106,112 +127,75 @@ function Tasks({ role }) {
           background: #7000ff;
           color: white;
           border: none;
-          padding: 10px 24px;
+          padding: 10px 22px;
           border-radius: 12px;
           font-weight: 700;
           cursor: pointer;
-          transition: all 0.3s;
-          white-space: nowrap;
         }
 
-        .assign-btn:hover {
-          background: #00f2fe;
-          color: #000;
-          box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+        .danger-btn {
+          background: #ff3b3b;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 10px;
+          font-weight: 700;
+          cursor: pointer;
         }
 
-        /* TASK LIST */
-        .task-list {
-          display: grid;
-          gap: 12px;
-        }
+        .task-list { display: grid; gap: 12px; }
 
         .task-card {
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.08);
           border-radius: 14px;
-          padding: 18px 24px;
+          padding: 18px 22px;
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          transition: transform 0.2s, background 0.2s;
+          align-items: center;
         }
 
-        .task-card:hover {
-          background: rgba(255, 255, 255, 0.08);
-          transform: translateX(5px);
-        }
+        .task-main { font-weight: 700; color: #fff; }
 
-        .task-info {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
+        .task-meta { font-size: 12px; color: #94a3b8; }
 
-        .task-main {
-          font-weight: 700;
-          color: #fff;
-          font-size: 16px;
-        }
-
-        .task-meta {
-          font-size: 12px;
-          color: #64748b;
-        }
-
-        /* STATUS TAGS */
-        .status-tag {
+        .status {
           padding: 4px 12px;
           border-radius: 100px;
           font-size: 11px;
           font-weight: 800;
-          text-transform: uppercase;
+          margin-left: 8px;
         }
 
-        .status-pending {
-          background: rgba(255, 171, 0, 0.1);
+        .pending {
+          background: rgba(255,171,0,0.15);
           color: #ffab00;
-          border: 1px solid rgba(255, 171, 0, 0.2);
         }
 
-        .status-done {
-          background: rgba(0, 242, 254, 0.1);
+        .done {
+          background: rgba(0,242,254,0.15);
           color: #00f2fe;
-          border: 1px solid rgba(0, 242, 254, 0.2);
         }
 
-        .done-btn {
-          background: rgba(255, 255, 255, 0.1);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-          color: #fff;
-          padding: 8px 16px;
+        .action-btn {
+          background: rgba(255,255,255,0.1);
+          border: 1px solid rgba(255,255,255,0.2);
+          color: white;
+          padding: 8px 14px;
           border-radius: 8px;
-          font-size: 13px;
           font-weight: 700;
           cursor: pointer;
-          transition: 0.3s;
-        }
-
-        .done-btn:hover {
-          background: #00f2fe;
-          color: #000;
-          border-color: #00f2fe;
-        }
-
-        .loading-text {
-          text-align: center;
-          color: #64748b;
-          margin-top: 40px;
         }
       `}</style>
 
       <div className="tasks-header">
-        <h3 className="tasks-title">
-          <span>📋</span> Task Operations
-        </h3>
-        <span className="status-tag status-pending">
-          {tasks.filter(t => t.status === "pending").length} Active
-        </span>
+        <h3 className="tasks-title">📋 Task Operations</h3>
+
+        {role === "admin" && (
+          <button className="danger-btn" onClick={deleteCompletedTasks}>
+            🗑 Delete Completed
+          </button>
+        )}
       </div>
 
       {role === "admin" && (
@@ -221,45 +205,51 @@ function Tasks({ role }) {
             placeholder="Describe the objective..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && createTask()}
+            onKeyDown={(e) => e.key === "Enter" && createTask()}
           />
           <button className="assign-btn" onClick={createTask}>
-            Deploy Task
+            Deploy
           </button>
         </div>
       )}
 
-      {/* 🔵 TASK LIST */}
       <div className="task-list">
         {loading ? (
-          <p className="loading-text">Synchronizing tasks...</p>
+          <p style={{ color: "#94a3b8" }}>Loading tasks...</p>
         ) : tasks.length === 0 ? (
-          <p className="loading-text">No tasks currently deployed.</p>
+          <p style={{ color: "#94a3b8" }}>No tasks available.</p>
         ) : (
           tasks.map((task) => (
             <div key={task.id} className="task-card">
-              <div className="task-info">
-                <span className="task-main">{task.title}</span>
-                <span className="task-meta">
-                  {task.createdAt ? new Date(task.createdAt.seconds * 1000).toLocaleDateString() : 'Scheduling...'}
-                  {' • '}
-                  <span className={`status-tag ${task.status === "done" ? "status-done" : "status-pending"}`}>
-                    {task.status}
+              <div>
+                <div className="task-main">{task.title}</div>
+                <div className="task-meta">
+                  {task.createdAt?.seconds
+                    ? new Date(task.createdAt.seconds * 1000).toLocaleDateString()
+                    : "—"}
+                  <span className={`status ${task.status}`}>
+                    {(task.status || "pending").toUpperCase()}
                   </span>
-                </span>
+                </div>
               </div>
 
-              <div className="task-actions">
-                
+              <div style={{ display: "flex", gap: "8px" }}>
                 {role === "member" && task.status === "pending" && (
-                  <button className="done-btn" onClick={() => markDone(task.id)}>
-                    Mark Complete
+                  <button
+                    className="action-btn"
+                    onClick={() => markDone(task.id)}
+                  >
+                    Mark Done
                   </button>
                 )}
-                
-                
-                {role === "admin" && task.status === "done" && (
-                  <span style={{ color: "#00f2fe", fontSize: "18px" }}>L</span>
+
+                {role === "admin" && (
+                  <button
+                    className="action-btn"
+                    onClick={() => deleteTask(task.id)}
+                  >
+                    ❌
+                  </button>
                 )}
               </div>
             </div>

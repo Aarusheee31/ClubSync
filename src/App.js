@@ -4,32 +4,26 @@ import { auth, db } from "./firebase";
 import { signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import React from "react";
-import "./Components/global.css";
+import "./components/global.css";
 
-// Components
-import Login from "./Components/Login";
-import Signup from "./Components/Signup";
-import Attendance from "./Components/Attendance";
-import Announcements from "./Components/Announcements";
-import UserDashboard from "./Components/UserDashboard";
-import AdminDashboard from "./Components/AdminDashboard";
-import SocietyDashboard from "./Components/SocietyDashboard";
-import Chat from "./Components/Chat";
-import Rooms from "./Components/Rooms";
-import Tasks from "./Components/Task";
-import Profile from "./Components/Profile";
+
+import Login from "./components/login";
+import Signup from "./components/signup";
+import Attendance from "./components/attendance";
+import Announcements from "./components/announcements";
+import UserDashboard from "./components/userdashboard";
+import AdminDashboard from "./components/admindashboard";
+import SocietyDashboard from "./components/societydashboard";
+import Chat from "./components/chat";
+import Rooms from "./components/rooms";
+import Tasks from "./components/task";
+import Profile from "./components/profile";
 
 function App() {
-<<<<<<< Updated upstream
   const [user, loadingAuth] = useAuthState(auth); 
   const [role, setRole] = useState("member");
   const [loadingRole, setLoadingRole] = useState(true);
   const [screen, setScreen] = useState("dashboard"); // Set default screen
-=======
-  
-  const [inSociety, setInSociety] = useState(false);
-  const [user] = useAuthState(auth); 
->>>>>>> Stashed changes
   const [tab, setTab] = useState("announcements");
   const [activeRoom, setActiveRoom] = useState(null);
 
@@ -39,7 +33,6 @@ function App() {
       return;
     }
 
-<<<<<<< Updated upstream
     const fetchRole = async () => {
       setLoadingRole(true);
       try {
@@ -53,18 +46,6 @@ function App() {
       }
       setLoadingRole(false);
     };
-=======
-  fetchRole();
-}, [user]);
-
-if (screen === "user") {
-  return (
-    <UserDashboard
-      goToSociety={() => setScreen("society")}
-    />
-  );
-}
->>>>>>> Stashed changes
 
     fetchRole();
   }, [user]);
