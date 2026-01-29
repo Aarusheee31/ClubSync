@@ -1,8 +1,8 @@
 import { useState } from "react";
-import Announcements from "./announcements";
-import Attendance from "./attendance";
-import Tasks from "./task";
-import Rooms from "./rooms";
+import Announcements from "./Announcements";
+import Attendance from "./Attendance";
+import Tasks from "./Task";
+import Rooms from "./Rooms";
 
 function SocietyDashboard({ role, goBack }) {
   const [tab, setTab] = useState("announcements");

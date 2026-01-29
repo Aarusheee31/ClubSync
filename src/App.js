@@ -1,142 +1,120 @@
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useState } from "react";
-import { auth } from "./firebase";
-import Login from "./components/login";
+import { useState, useEffect } from "react";
+import { auth, db } from "./firebase";
 import { signOut } from "firebase/auth";
-import Attendance from "./components/attendance";
-import Announcements from "./components/announcements";
-import Signup from "./components/signup";
-import UserDashboard from "./components/userdashboard";
-import React from "react";
-import Chat from "./components/chat";
-import Rooms from "./components/rooms";
-import Tasks from "./components/task";
-import Profile from "./components/profile";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "./firebase";
-import { useEffect } from "react";
-import AdminDashboard from "./components/admindashboard";
-import SocietyDashboard from "./components/societydashboard";
+import React from "react";
+import "./Components/global.css";
+
+// Components
+import Login from "./Components/Login";
+import Signup from "./Components/Signup";
+import Attendance from "./Components/Attendance";
+import Announcements from "./Components/Announcements";
+import UserDashboard from "./Components/UserDashboard";
+import AdminDashboard from "./Components/AdminDashboard";
+import SocietyDashboard from "./Components/SocietyDashboard";
+import Chat from "./Components/Chat";
+import Rooms from "./Components/Rooms";
+import Tasks from "./Components/Task";
+import Profile from "./Components/Profile";
+
 function App() {
-  const [inSociety, setInSociety] = useState(false);
-  const [user] = useAuthState(auth); 
+  const [user, loadingAuth] = useAuthState(auth); 
+  const [role, setRole] = useState("member");
+  const [loadingRole, setLoadingRole] = useState(true);
+  const [screen, setScreen] = useState("dashboard"); // Set default screen
   const [tab, setTab] = useState("announcements");
   const [activeRoom, setActiveRoom] = useState(null);
- const [loadingRole, setLoadingRole] = useState(true);
- const [loginType, setLoginType] = useState(null);
- const [screen, setScreen] = useState("login"); 
-const [role, setRole] = useState("member");
 
-
-
-
-useEffect(() => {
-  if (!user) return;
-
-  const fetchRole = async () => {
-    const ref = doc(db, "users", user.uid);
-    const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-      setRole(snap.data().role);
+  useEffect(() => {
+    if (!user) {
+      setLoadingRole(false);
+      return;
     }
-    setLoadingRole(false);
-  };
 
-  fetchRole();
-}, [user]);
-if (loadingRole) {
-  return <p>Loading...</p>;
-}
-if (screen === "user") {
-  return (
-    <UserDashboard
-      goToSociety={() => setScreen("society")}
-    />
-  );
-}
+    const fetchRole = async () => {
+      setLoadingRole(true);
+      try {
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          setRole(snap.data().role);
+        }
+      } catch (error) {
+        console.error("Error fetching role:", error);
+      }
+      setLoadingRole(false);
+    };
 
-if (screen === "society") {
-  return (
-    <SocietyDashboard
-      role={role}
-      goBack={() => setScreen("user")}
-    />
-  );
-}
+    fetchRole();
+  }, [user]);
 
+  // 1. Loading State Check
+  if (loadingAuth || loadingRole) {
+    return <div style={{ textAlign: "center", marginTop: "50px" }}>Loading ClubSync...</div>;
+  }
 
-if (!user && screen === "login") {
-  return <Login goToSignup={() => setScreen("signup")} />;
-}
+  // 2. Auth Check: If not logged in, show Login or Signup
+  if (!user) {
+    return screen === "signup" ? 
+      <Signup goToLogin={() => setScreen("login")} /> : 
+      <Login goToSignup={() => setScreen("signup")} />;
+  }
 
-if (!user && screen === "signup") {
-  return <Signup goToLogin={() => setScreen("login")} />;
-}
+  // 3. Admin View
+  if (role === "admin") {
+    return <AdminDashboard />;
+  }
 
+  // 4. Main Navigation Logic
+  // This ensures your MODERN dashboard is the first thing users see
+  if (screen === "dashboard") {
+    return <UserDashboard goToSociety={() => setScreen("society")} />;
+  }
 
-if (role === "admin") {
-  return <AdminDashboard />;
-}
-
-if (role === "member") {
-  return <UserDashboard goToSociety={() => setInSociety(true)} />;
-}
-
-if (!inSociety) {
-  return <UserDashboard goToSociety={() => setInSociety(true)} />;
-}
-if (screen === "profile") {
-   {
+  if (screen === "profile") {
     return <Profile goBack={() => setScreen("dashboard")} />;
+  }
+
+  // 5. Society Inner View (Tabs)
+  if (screen === "society") {
+    return (
+      <div style={{ textAlign: "center", marginTop: "40px" }}>
+        <h1>Society Dashboard</h1>
+        <button onClick={() => setScreen("dashboard")}>← Back to Societies</button>
+        <button onClick={() => setScreen("profile")} style={{ marginLeft: "10px" }}>Profile</button>
+        <button onClick={() => signOut(auth)} style={{ marginLeft: "10px" }}>Logout</button>
+
+        <hr />
+        <div style={{ marginBottom: "20px" }}>
+          <button onClick={() => setTab("chat")}>Chat</button>
+          <button onClick={() => setTab("rooms")}>Rooms</button>
+          <button onClick={() => setTab("attendance")}>Attendance</button>
+          <button onClick={() => setTab("tasks")}>Tasks</button>
+          <button onClick={() => setTab("announcements")}>Announcements</button>
+        </div>
+        <hr />
+
+        {tab === "attendance" && <Attendance />}
+        {tab === "announcements" && <Announcements />}
+        {tab === "chat" && <Chat />}
+        
+        {tab === "rooms" && !activeRoom && (
+          <Rooms openRoom={(room) => setActiveRoom(room)} />
+        )}
+
+        {activeRoom && (
+          <div>
+            <h3>📢 Room: {activeRoom}</h3>
+            <button onClick={() => setActiveRoom(null)}>Back to Rooms</button>
+          </div>
+        )}
+
+        {tab === "tasks" && <Tasks />}
+      </div>
+    );
   }
 }
 
-  return (
-  <div style={{ textAlign: "center", marginTop: "40px" }}>
-    <h1> Society Dashboard</h1>
-
-    <button onClick={() => setInSociety(false)}> Back</button>
-    <br /><br />
-    <button onClick={() => signOut(auth)}>Logout</button>
-
-    <hr />
-   <button onClick={() => setScreen("profile")}>Profile</button>
-
-   
-    <div style={{ marginBottom: "20px" }}>
-      <button onClick={() => setTab("chat")}>Chat</button>
-      <button onClick={() => setTab("rooms")}>Rooms</button>
-      <button onClick={() => setTab("attendance")}>Attendance</button>
-      <button onClick={() => setTab("tasks")}>Tasks</button>
-      <button onClick={() => setTab("announcements")}>Announcements</button>
-    </div>
-
-    <hr />
-
-    
-    {tab === "attendance" && <Attendance />}
-    <div style={{ display: tab === "announcements" ? "block" : "none" }}>
-  <Announcements />
-</div>
-
-    {tab === "chat" && <Chat />}
-    {tab === "rooms" && !activeRoom && (
-  <Rooms openRoom={(room) => setActiveRoom(room)} />
-)}
-
-{activeRoom && (
-  <div>
-    <h3>📢 Room: {activeRoom}</h3>
-    <button onClick={() => setActiveRoom(null)}>Back to Rooms</button>
-    <p>Room chat / discussion here</p>
-  </div>
-)}
-
-    {tab === "tasks" && <Tasks />}
-  </div>
-);
-
-
-}
 export default App;
